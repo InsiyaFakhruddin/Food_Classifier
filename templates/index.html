@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Classification</title>
+    <style>
+        body {
+            font-family: Impact, Arial, sans-serif;
+            color: white;
+            background-image: url("{{ url_for('static', filename='images/salad.avif') }}");
+            background-size: cover;
+            background-position: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-start;
+            height: 100vh;
+            text-align: right;
+            overflow-x: hidden; /* Hide horizontal overflow */
+        }
+
+        .content-container {
+            padding: 20px; /* Add padding to content container */
+            max-width: 80%; /* Limit content container width */
+            margin-top: auto; /* Align content container to the bottom */
+        }
+
+        h1 {
+            font-size: 6vw; /* Responsive font size based on viewport width */
+            margin-top: 0; /* Remove default margin */
+        }
+
+        button {
+            font-size: 3.5vw; /* Responsive font size based on viewport width */
+            margin-top: 10px; /* Add margin between buttons */
+            padding: 10px 20px; /* Add padding to buttons */
+        }
+
+        #classification-result {
+            font-size: 3vw; /* Responsive font size for classification result */
+            margin-top: 20px; /* Add margin between classification result and buttons */
+        }
+
+        /* Media query for smaller screens */
+        @media screen and (max-width: 768px) {
+            h1 {
+                font-size: 8vw; /* Adjust font size for smaller screens */
+            }
+
+            button {
+                font-size: 5vw; /* Adjust font size for smaller screens */
+            }
+
+            #classification-result {
+                font-size: 4vw; /* Adjust font size for smaller screens */
+            }
+        }
+
+        /* Style for image preview */
+        #image-preview {
+            max-width: 50%; /* Ensure image fits container */
+            height: auto; /* Maintain aspect ratio */
+            margin-top: 20px; /* Add margin between image and buttons */
+        }
+    </style>
+</head>
+<body>
+    <div class="background-blur"></div>
+    <div class="content-container">
+        <h1>Food Classification</h1>
+        <input type="file" id="image-input" accept="image/*" style="display: none;" onchange="previewImage(event)">
+        <button onclick="selectImage()">Choose Image</button>
+        <button onclick="classifyImage()">Classify Image</button>
+        <div>
+            <h2>Classification Result</h2>
+            <div id="classification-result"></div>
+        </div>
+    </div>
+
+    <script>
+        function selectImage() {
+            const input = document.getElementById('image-input');
+            input.click(); // Trigger file input
+        }
+
+        function previewImage(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const imagePreview = document.getElementById('image-preview');
+                if (!imagePreview) {
+                    // If image preview does not exist, create it
+                    const imagePreview = document.createElement('img');
+                    imagePreview.id = 'image-preview';
+                    imagePreview.src = e.target.result;
+                    document.body.appendChild(imagePreview);
+                } else {
+                    // If image preview already exists, update its source
+                    imagePreview.src = e.target.result;
+                }
+            }
+
+            reader.readAsDataURL(file);
+        }
+
+        function classifyImage() {
+            const fileInput = document.getElementById('image-input');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Please select an image first!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            fetch('/classify', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('classification-result');
+                resultDiv.innerHTML = `<h3>${data.class}</h3>`;
+                if (Object.keys(data.nutrients).length > 0) {
+                    resultDiv.innerHTML += '<ul>';
+                    Object.entries(data.nutrients).forEach(([nutrient, value]) => {
+                        resultDiv.innerHTML += `<li>${nutrient}: ${value}g</li>`;
+                    });
+                    resultDiv.innerHTML += '</ul>';
+                } else {
+                    resultDiv.innerHTML += '<p>No nutrient data available.</p>';
+                }
+            })
+            .catch(error => console.error('Error:', error));
+}
+
+    </script>
+</body>
+</html>
