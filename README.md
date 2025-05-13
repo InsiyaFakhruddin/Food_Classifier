@@ -7,7 +7,7 @@ This project is a deep learning-based food image classifier that predicts the ty
 
 ## Demo
 
-![Food Classifier Demo](image-2.png)
+![Food Classifier Demo](food_Classifier_Demo.png)
 
 ---
 
